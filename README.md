@@ -1,7 +1,7 @@
 # 🚗 Vehicle Type Classification System Using CNN
 
 > A CNN-based decision-support system for automated vehicle type classification from traffic images.  
-> **Pattern Recognition Course — University Project**
+> **Pattern Recognition**
 
 [![Python](https://img.shields.io/badge/Python-3.10-blue)](https://python.org)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13-orange)](https://tensorflow.org)
@@ -23,45 +23,6 @@ This project develops and benchmarks **four deep learning architectures** for au
 
 ### Vehicle Classes (7)
 🚲 Bicycle · 🚌 Bus · 🚗 Car · 🏍️ Motorcycle · 🛻 Pickup Truck · 🚛 Truck · 🚐 Van
-
----
-
-## 📂 Repository Structure
-
-```
-Vehicle-Type-Classification-System/
-├── notebooks/
-│   └── vehicle_classification_notebook.py   # Complete Kaggle notebook (18 sections)
-│
-├── webapp/                                   # Flask web application
-│   ├── app.py                                # Main Flask application
-│   ├── requirements.txt                      # Web app dependencies
-│   ├── models/                               # Trained model files (.keras, .h5)
-│   ├── static/
-│   │   ├── css/style.css
-│   │   ├── js/main.js
-│   │   ├── uploads/                          # Uploaded images (runtime)
-│   │   ├── gradcam/                          # Grad-CAM outputs (runtime)
-│   │   └── figures/                          # Training figures
-│   └── templates/
-│       ├── base.html
-│       ├── index.html                        # Home page
-│       ├── upload.html                       # Image upload
-│       ├── prediction.html                   # Results page
-│       ├── gradcam.html                      # Explainability
-│       ├── dashboard.html                    # Analytics
-│       ├── comparison.html                   # Model comparison
-│       └── about.html                        # Project info
-│
-├── reports/
-│   └── Vehicle_Classification_Proposal.docx # Research proposal
-│
-├── dataset/                                  # (Empty — download from Kaggle)
-├── outputs/                                  # Training outputs
-├── requirements.txt                          # Full environment
-├── .gitignore
-└── LICENSE
-```
 
 ---
 
@@ -129,49 +90,6 @@ After training, copy model files to `webapp/models/` and figures to `webapp/stat
 
 ---
 
-## 🌐 Running the Web Application
-
-### 1. (Optional) Copy trained models
-```bash
-cp /kaggle/working/models/*.keras webapp/models/
-cp /kaggle/working/models/model_config.json webapp/models/
-cp /kaggle/working/outputs/figures/*.png webapp/static/figures/
-```
-
-### 2. Install web app dependencies
-```bash
-cd webapp
-pip install -r requirements.txt
-```
-
-### 3. Launch the application
-```bash
-python app.py
-```
-
-### 4. Open in browser
-```
-http://127.0.0.1:5000
-```
-
-The app runs in **demo mode** (simulated predictions) if trained models are not found.
-
----
-
-## 📊 Web Application Pages
-
-| Page | URL | Description |
-|------|-----|-------------|
-| Home | `/` | Project overview, objectives, dataset info |
-| Upload | `/upload` | Image upload with model selection |
-| Prediction | `/prediction` | Results + top-5 probabilities |
-| Grad-CAM | `/gradcam` | Heatmap overlay + attention explanation |
-| Dashboard | `/dashboard` | Metrics, charts, training curves |
-| Comparison | `/comparison` | 4-model side-by-side comparison |
-| About | `/about` | Background, methodology, research questions |
-
----
-
 ## 🔬 Methodology
 
 1. **Preprocessing:** Resize to 224×224, normalize to [0,1], ImageNet standardization for TL models
@@ -190,41 +108,11 @@ The app runs in **demo mode** (simulated predictions) if trained models are not 
 |-------|----------|-----------|-----------|-----------|
 | Custom CNN | ~81% | ~0.80 | 7.2 | ~12 |
 | MobileNetV2 | ~90% | ~0.89 | 3.4 | ~18 |
-| **ResNet50** | **~93%** | **~0.93** | 25.6 | ~28 |
+| ResNet50 | ~93% | ~0.93 | 25.6 | ~28 |
 | EfficientNetB0 | ~92% | ~0.91 | 5.3 | ~22 |
 
 ---
 
-## 📖 Key Reference
-
-> Khan, S. U., Hussain, A., Ali, S., & Bhutta, M. N. M. (2024). *Deep Learning-Based Vehicle Type and Color Classification to Support Safe Autonomous Driving.* Applied Sciences, 14(4), 1600. https://doi.org/10.3390/app14041600
-
----
-
-## 🔮 Future Work
-
-- Object detection with YOLO/Faster R-CNN for multi-vehicle scenes
-- Video-based temporal modeling (LSTM, 3D-CNN)
-- Edge deployment via TensorFlow Lite quantization
-- Adversarial robustness evaluation
-- Night/weather condition generalization
-
----
-
-## ⚠️ Ethical Considerations
-
-This system is a **decision-support tool** and should NOT be used as a fully autonomous decision-maker in safety-critical contexts. Human oversight remains essential. The dataset may not represent all global traffic conditions, vehicle types, or environmental variations. Deployment in new environments requires re-evaluation and validation.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.  
-Dataset: CC BY-SA 4.0 — download separately from Kaggle.
-
----
-
-## 🙏 Acknowledgements
 
 - Dataset: Mohamed Maher (Kaggle)
 - Reference architecture: He et al. (ResNet), Sandler et al. (MobileNetV2), Tan & Le (EfficientNet)
