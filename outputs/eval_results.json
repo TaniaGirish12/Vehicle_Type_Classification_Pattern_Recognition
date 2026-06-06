@@ -1,0 +1,210 @@
+{
+  "Custom CNN": {
+    "accuracy": 0.899880810488677,
+    "macro_f1": 0.8999951190100306,
+    "macro_precision": 0.9010265847267285,
+    "macro_recall": 0.8998499399759903,
+    "parameters": 1443879,
+    "inference_ms": 5.545605719089508,
+    "per_class": {
+      "Auto Rickshaws": {
+        "precision": 0.865546218487395,
+        "recall": 0.8583333333333333,
+        "f1-score": 0.8619246861924686,
+        "support": 120.0
+      },
+      "Bikes": {
+        "precision": 0.957983193277311,
+        "recall": 0.95,
+        "f1-score": 0.9539748953974896,
+        "support": 120.0
+      },
+      "Cars": {
+        "precision": 0.8739495798319328,
+        "recall": 0.8739495798319328,
+        "f1-score": 0.8739495798319328,
+        "support": 119.0
+      },
+      "Motorcycles": {
+        "precision": 0.9473684210526315,
+        "recall": 0.9,
+        "f1-score": 0.9230769230769231,
+        "support": 120.0
+      },
+      "Planes": {
+        "precision": 0.9298245614035088,
+        "recall": 0.8833333333333333,
+        "f1-score": 0.905982905982906,
+        "support": 120.0
+      },
+      "Ships": {
+        "precision": 0.8625954198473282,
+        "recall": 0.9416666666666667,
+        "f1-score": 0.900398406374502,
+        "support": 120.0
+      },
+      "Trains": {
+        "precision": 0.8699186991869918,
+        "recall": 0.8916666666666667,
+        "f1-score": 0.8806584362139918,
+        "support": 120.0
+      }
+    }
+  },
+  "MobileNetV2": {
+    "accuracy": 0.9916567342073898,
+    "macro_f1": 0.9916463051955385,
+    "macro_precision": 0.9917050330473677,
+    "macro_recall": 0.9916466586634654,
+    "parameters": 2587719,
+    "inference_ms": 5.119256675243378,
+    "per_class": {
+      "Auto Rickshaws": {
+        "precision": 0.9834710743801653,
+        "recall": 0.9916666666666667,
+        "f1-score": 0.9875518672199171,
+        "support": 120.0
+      },
+      "Bikes": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 120.0
+      },
+      "Cars": {
+        "precision": 0.9915254237288136,
+        "recall": 0.9831932773109243,
+        "f1-score": 0.9873417721518988,
+        "support": 119.0
+      },
+      "Motorcycles": {
+        "precision": 0.9915966386554622,
+        "recall": 0.9833333333333333,
+        "f1-score": 0.9874476987447699,
+        "support": 120.0
+      },
+      "Planes": {
+        "precision": 1.0,
+        "recall": 0.9833333333333333,
+        "f1-score": 0.9915966386554622,
+        "support": 120.0
+      },
+      "Ships": {
+        "precision": 0.9836065573770492,
+        "recall": 1.0,
+        "f1-score": 0.9917355371900827,
+        "support": 120.0
+      },
+      "Trains": {
+        "precision": 0.9917355371900827,
+        "recall": 1.0,
+        "f1-score": 0.995850622406639,
+        "support": 120.0
+      }
+    }
+  },
+  "ResNet50": {
+    "accuracy": 0.9892729439809297,
+    "macro_f1": 0.9892382505525867,
+    "macro_precision": 0.9895170811593099,
+    "macro_recall": 0.9892857142857142,
+    "parameters": 24769927,
+    "inference_ms": 6.9455549120903015,
+    "per_class": {
+      "Auto Rickshaws": {
+        "precision": 1.0,
+        "recall": 0.95,
+        "f1-score": 0.9743589743589743,
+        "support": 120.0
+      },
+      "Bikes": {
+        "precision": 1.0,
+        "recall": 0.9916666666666667,
+        "f1-score": 0.99581589958159,
+        "support": 120.0
+      },
+      "Cars": {
+        "precision": 0.9596774193548387,
+        "recall": 1.0,
+        "f1-score": 0.9794238683127572,
+        "support": 119.0
+      },
+      "Motorcycles": {
+        "precision": 0.9834710743801653,
+        "recall": 0.9916666666666667,
+        "f1-score": 0.9875518672199171,
+        "support": 120.0
+      },
+      "Planes": {
+        "precision": 1.0,
+        "recall": 0.9916666666666667,
+        "f1-score": 0.99581589958159,
+        "support": 120.0
+      },
+      "Ships": {
+        "precision": 0.9917355371900827,
+        "recall": 1.0,
+        "f1-score": 0.995850622406639,
+        "support": 120.0
+      },
+      "Trains": {
+        "precision": 0.9917355371900827,
+        "recall": 1.0,
+        "f1-score": 0.995850622406639,
+        "support": 120.0
+      }
+    }
+  },
+  "EfficientNetB0": {
+    "accuracy": 0.9928486293206198,
+    "macro_f1": 0.99283190417688,
+    "macro_precision": 0.9928960095079897,
+    "macro_recall": 0.9928471388555423,
+    "parameters": 4379306,
+    "inference_ms": 5.331142246723175,
+    "per_class": {
+      "Auto Rickshaws": {
+        "precision": 1.0,
+        "recall": 0.975,
+        "f1-score": 0.9873417721518988,
+        "support": 120.0
+      },
+      "Bikes": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 120.0
+      },
+      "Cars": {
+        "precision": 0.9833333333333333,
+        "recall": 0.9915966386554622,
+        "f1-score": 0.9874476987447699,
+        "support": 119.0
+      },
+      "Motorcycles": {
+        "precision": 0.9915966386554622,
+        "recall": 0.9833333333333333,
+        "f1-score": 0.9874476987447699,
+        "support": 120.0
+      },
+      "Planes": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 120.0
+      },
+      "Ships": {
+        "precision": 0.9917355371900827,
+        "recall": 1.0,
+        "f1-score": 0.995850622406639,
+        "support": 120.0
+      },
+      "Trains": {
+        "precision": 0.9836065573770492,
+        "recall": 1.0,
+        "f1-score": 0.9917355371900827,
+        "support": 120.0
+      }
+    }
+  }
+}

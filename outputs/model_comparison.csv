@@ -1,0 +1,5 @@
+Model,Accuracy (%),Precision,Recall,F1 (Macro),AUC (Macro),Params (M),Inference (ms)
+Custom CNN,89.99,0.901,0.8998,0.9,0.9928,1.44,5.55
+MobileNetV2,99.17,0.9917,0.9916,0.9916,0.9999,2.59,5.12
+ResNet50,98.93,0.9895,0.9893,0.9892,0.9998,24.77,6.95
+EfficientNetB0,99.28,0.9929,0.9928,0.9928,1.0,4.38,5.33
