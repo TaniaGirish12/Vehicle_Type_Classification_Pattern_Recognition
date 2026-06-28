@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Models — VehicleVision{% endblock %}
+
+{% block content %}
+<div class="page-section">
+  <div class="section-header">
+    <h1 class="section-title">Model Architectures</h1>
+    <p class="section-sub">Four CNN architectures trained on 5,600 vehicle images across 7 classes. All models use 224×224 input with Adam optimiser and categorical cross-entropy loss.</p>
+  </div>
+
+  <!-- Training approach banner -->
+  <div class="card training-banner">
+    <div class="tb-grid">
+      <div class="tb-item">
+        <span class="tb-icon">📐</span>
+        <div class="tb-val">224 × 224</div>
+        <div class="tb-lbl">Input Size</div>
+      </div>
+      <div class="tb-item">
+        <span class="tb-icon">🗂️</span>
+        <div class="tb-val">7</div>
+        <div class="tb-lbl">Output Classes</div>
+      </div>
+      <div class="tb-item">
+        <span class="tb-icon">⚙️</span>
+        <div class="tb-val">Adam</div>
+        <div class="tb-lbl">Optimiser</div>
+      </div>
+      <div class="tb-item">
+        <span class="tb-icon">📉</span>
+        <div class="tb-val">Cat. CE</div>
+        <div class="tb-lbl">Loss Function</div>
+      </div>
+      <div class="tb-item">
+        <span class="tb-icon">🔁</span>
+        <div class="tb-val">70/15/15</div>
+        <div class="tb-lbl">Train/Val/Test</div>
+      </div>
+      <div class="tb-item">
+        <span class="tb-icon">🛑</span>
+        <div class="tb-val">Patience 10</div>
+        <div class="tb-lbl">Early Stopping</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Model cards -->
+  <div class="model-cards-grid">
+    {% for key, m in models.items() %}
+    <div class="model-arch-card card" style="--mc: {{ m.color }}">
+
+      <!-- Header -->
+      <div class="mac-header">
+        <div class="mac-dot" style="background: {{ m.color }}"></div>
+        <h2 class="mac-name">{{ m.label }}</h2>
+        {% if key == 'custom_cnn' %}
+        <span class="mac-tag">Baseline</span>
+        {% else %}
+        <span class="mac-tag mac-tag-tl">Transfer Learning</span>
+        {% endif %}
+      </div>
+
+      <p class="mac-desc">{{ m.description }}</p>
+
+      <!-- Key stats -->
+      <div class="mac-stats">
+        <div class="mac-stat">
+          <div class="mac-stat-val" style="color: {{ m.color }}">{{ m.accuracy }}%</div>
+          <div class="mac-stat-lbl">Accuracy</div>
+        </div>
+        <div class="mac-stat">
+          <div class="mac-stat-val">{{ m.f1 }}</div>
+          <div class="mac-stat-lbl">F1 Macro</div>
+        </div>
+        <div class="mac-stat">
+          <div class="mac-stat-val">{{ m.params }}</div>
+          <div class="mac-stat-lbl">Parameters</div>
+        </div>
+        <div class="mac-stat">
+          <div class="mac-stat-val">{{ m.infer_ms }} ms</div>
+          <div class="mac-stat-lbl">Inference</div>
+        </div>
+      </div>
+
+      <!-- Architecture layers -->
+      <div class="mac-arch">
+        <h4 class="mac-arch-title">Architecture Flow</h4>
+        <div class="arch-layers">
+          {% for layer in m.arch_summary %}
+          <div class="arch-layer">
+            <div class="arch-layer-dot" style="background: {{ m.color }}"></div>
+            <span class="arch-layer-text">{{ layer }}</span>
+          </div>
+          {% if not loop.last %}
+          <div class="arch-arrow">↓</div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Training strategy -->
+      <div class="mac-strategy">
+        {% if key == 'custom_cnn' %}
+        <div class="strategy-chip">🏗️ Trained from scratch</div>
+        <div class="strategy-chip">50 epochs max</div>
+        <div class="strategy-chip">LR 1e-3 → decay</div>
+        {% else %}
+        <div class="strategy-chip">❄️ Phase 1: Frozen base — 5 epochs</div>
+        <div class="strategy-chip">🔥 Phase 2: Fine-tune last 20–30 layers — 25 epochs</div>
+        <div class="strategy-chip">LR 1e-3 → 1e-4</div>
+        {% endif %}
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Augmentation info -->
+  <div class="card augment-card">
+    <h3 class="card-subtitle">Data Augmentation Pipeline <span class="subtle">(training set only)</span></h3>
+    <div class="augment-grid">
+      {% set augs = [
+        ('↔️', 'Horizontal Flip', 'Random left-right mirror'),
+        ('↕️', 'Vertical Flip', 'Random top-bottom mirror'),
+        ('🔄', 'Rotation ±20°', 'Random rotation up to 20 degrees'),
+        ('🔍', 'Zoom 0.8–1.2×', 'Random zoom in or out'),
+        ('☀️', 'Brightness', 'Random brightness adjustment'),
+        ('🌈', 'Hue & Saturation', 'Colour jitter for robustness'),
+        ('✂️', 'Random Crop', 'Crop and resize to 224×224'),
+        ('⚖️', 'Class Weights', 'Balanced class weighting'),
+      ] %}
+      {% for icon, name, desc in augs %}
+      <div class="augment-item">
+        <span class="aug-icon">{{ icon }}</span>
+        <div>
+          <div class="aug-name">{{ name }}</div>
+          <div class="aug-desc">{{ desc }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="aug-figure-wrap">
+      <img src="{{ url_for('static', filename='figures/fig4_augmentation.png') }}"
+           alt="Augmentation examples" class="aug-figure" loading="lazy" />
+      <p class="fig-caption">Fig 4 — Original image and 9 augmented variants</p>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+Flask==3.1.3
+gunicorn==26.0.0
+Werkzeug==3.1.8
+numpy==2.5.0
+Pillow==11.2.1
+python-dotenv==1.2.2
+
+# ── Live TF inference (optional) ────────────────────────────────────────────
+# Uncomment the line below to enable real model predictions.
+# This adds ~5-8 min to Render build time and requires model files in ./models/
+# Also set DEMO_MODE=false in your environment.
+#
+# tensorflow-cpu==2.15.1

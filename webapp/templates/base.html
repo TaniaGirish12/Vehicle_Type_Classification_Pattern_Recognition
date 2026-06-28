@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}VehicleVision — CNN Classifier{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="{{ url_for('classifier') }}" class="nav-logo">
+      <span class="logo-icon">⬡</span>
+      <span class="logo-text">Vehicle<strong>Vision</strong></span>
+    </a>
+
+    <div class="nav-links">
+      <a href="{{ url_for('classifier') }}"
+         class="nav-link {% if request.endpoint == 'classifier' %}active{% endif %}">
+        Classifier
+      </a>
+      <a href="{{ url_for('results') }}"
+         class="nav-link {% if request.endpoint == 'results' %}active{% endif %}">
+        Results
+      </a>
+      <a href="{{ url_for('comparison') }}"
+         class="nav-link {% if request.endpoint == 'comparison' %}active{% endif %}">
+        Comparison
+      </a>
+      <a href="{{ url_for('models_page') }}"
+         class="nav-link {% if request.endpoint == 'models_page' %}active{% endif %}">
+        Models
+      </a>
+      <a href="{{ url_for('about') }}"
+         class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">
+        About
+      </a>
+    </div>
+
+    {% if demo %}
+    <span class="demo-badge">DEMO MODE</span>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- ── Page content ─────────────────────────────────────────────────────────── -->
+<main class="page-main">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── Footer ──────────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-inner">
+    <span class="footer-text">
+      VehicleVision · Pattern Recognition Project · Tania Girish · 2025
+    </span>
+    <span class="footer-text muted">
+      Custom CNN · MobileNetV2 · ResNet50 · EfficientNetB0
+    </span>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

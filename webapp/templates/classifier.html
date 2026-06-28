@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% block title %}Classifier — VehicleVision{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="hero-inner">
+    <p class="hero-eyebrow">Pattern Recognition · CNN Image Classifier</p>
+    <h1 class="hero-title">Identify any vehicle<br><span class="grad">in under 10 ms</span></h1>
+    <p class="hero-sub">Upload a traffic or parking image and let one of four trained neural networks classify the vehicle type across 7 categories.</p>
+  </div>
+</div>
+
+<div class="classifier-grid">
+  <!-- ── Left: Upload ─────────────────────────────────────────────────────── -->
+  <section class="card upload-card" id="uploadCard">
+    <h2 class="card-title">
+      <span class="card-icon">📁</span> Upload Image
+    </h2>
+
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" name="image" accept=".jpg,.jpeg,.png,.webp,.bmp" hidden />
+      <div class="dropzone-idle" id="dropIdle">
+        <div class="dz-icon">🖼️</div>
+        <p class="dz-text">Drag &amp; drop an image here</p>
+        <p class="dz-sub">or</p>
+        <button class="btn btn-outline" type="button" id="browseBtn">Browse files</button>
+        <p class="dz-hint">PNG · JPG · WebP · Max 10 MB</p>
+      </div>
+      <div class="dropzone-preview hidden" id="dropPreview">
+        <img id="previewImg" src="" alt="Preview" class="preview-img" />
+        <div class="preview-meta">
+          <span class="preview-name" id="previewName"></span>
+          <button class="btn btn-ghost btn-sm" id="clearBtn">✕ Remove</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-formats">
+      <span class="format-chip">Auto Rickshaws</span>
+      <span class="format-chip">Bikes</span>
+      <span class="format-chip">Cars</span>
+      <span class="format-chip">Motorcycles</span>
+      <span class="format-chip">Planes</span>
+      <span class="format-chip">Ships</span>
+      <span class="format-chip">Trains</span>
+    </div>
+  </section>
+
+  <!-- ── Right: Model selection + actions ─────────────────────────────────── -->
+  <section class="card model-select-card">
+    <h2 class="card-title">
+      <span class="card-icon">🧠</span> Select Model
+    </h2>
+
+    <div class="model-options" id="modelOptions">
+      {% for key, meta in models.items() %}
+      <label class="model-option" data-key="{{ key }}">
+        <input type="radio" name="model" value="{{ key }}"
+               {% if key == 'efficientnetb0' %}checked{% endif %} />
+        <div class="model-option-inner">
+          <div class="model-option-header">
+            <span class="model-dot" style="background:{{ meta.color }}"></span>
+            <span class="model-option-name">{{ meta.label }}</span>
+            {% if key == 'efficientnetb0' %}
+            <span class="badge badge-best">Best</span>
+            {% endif %}
+          </div>
+          <p class="model-option-desc">{{ meta.description }}</p>
+          <div class="model-option-stats">
+            <span class="stat-chip">{{ meta.accuracy }}% acc</span>
+            <span class="stat-chip">{{ meta.params }} params</span>
+            <span class="stat-chip">{{ meta.infer_ms }} ms</span>
+          </div>
+        </div>
+      </label>
+      {% endfor %}
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-primary" id="classifyBtn" disabled>
+        <span class="btn-icon">⚡</span>
+        Classify Image
+      </button>
+      <button class="btn btn-secondary" id="compareBtn" disabled>
+        <span class="btn-icon">⇌</span>
+        Compare All Models
+      </button>
+    </div>
+
+    {% if demo %}
+    <p class="demo-note">
+      ℹ️  Running in demo mode — predictions are realistic simulations. Deploy with model files for live inference.
+    </p>
+    {% endif %}
+  </section>
+</div>
+
+<!-- ── Inline results ───────────────────────────────────────────────────────── -->
+<div class="results-strip hidden" id="resultsStrip">
+  <div class="results-strip-inner" id="resultsStripContent">
+    <!-- Populated by JS -->
+  </div>
+  <div class="results-strip-actions">
+    <a href="{{ url_for('results') }}" class="btn btn-outline" id="viewFullBtn">
+      View Full Results →
+    </a>
+  </div>
+</div>
+
+<!-- ── Loading overlay ─────────────────────────────────────────────────────── -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p class="loading-text" id="loadingText">Running inference…</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Classifier page controller
+(function () {
+  const dropzone   = document.getElementById('dropzone');
+  const fileInput  = document.getElementById('fileInput');
+  const browseBtn  = document.getElementById('browseBtn');
+  const clearBtn   = document.getElementById('clearBtn');
+  const previewImg = document.getElementById('previewImg');
+  const previewName = document.getElementById('previewName');
+  const dropIdle   = document.getElementById('dropIdle');
+  const dropPreview = document.getElementById('dropPreview');
+  const classifyBtn = document.getElementById('classifyBtn');
+  const compareBtn  = document.getElementById('compareBtn');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const loadingText    = document.getElementById('loadingText');
+  const resultsStrip   = document.getElementById('resultsStrip');
+  const resultsContent = document.getElementById('resultsStripContent');
+
+  let currentFile = null;
+
+  // ── File handling ──────────────────────────────────────────────────────────
+  browseBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    handleFile(e.dataTransfer.files[0]);
+  });
+
+  clearBtn.addEventListener('click', clearFile);
+
+  function handleFile(file) {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) { showError('File exceeds 10 MB limit.'); return; }
+    const allowed = ['image/jpeg','image/png','image/webp','image/bmp'];
+    if (!allowed.includes(file.type)) { showError('Unsupported file type.'); return; }
+    currentFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src = e.target.result;
+      previewName.textContent = file.name;
+      dropIdle.classList.add('hidden');
+      dropPreview.classList.remove('hidden');
+      classifyBtn.disabled = false;
+      compareBtn.disabled = false;
+      resultsStrip.classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearFile() {
+    currentFile = null;
+    fileInput.value = '';
+    previewImg.src = '';
+    dropIdle.classList.remove('hidden');
+    dropPreview.classList.add('hidden');
+    classifyBtn.disabled = true;
+    compareBtn.disabled = true;
+    resultsStrip.classList.add('hidden');
+  }
+
+  // ── Selected model ─────────────────────────────────────────────────────────
+  function getSelectedModel() {
+    return document.querySelector('input[name="model"]:checked')?.value || 'efficientnetb0';
+  }
+
+  // ── Submit ──────────────────────────────────────────────────────────────────
+  classifyBtn.addEventListener('click', () => submitClassify(false));
+  compareBtn.addEventListener('click',  () => submitClassify(true));
+
+  function submitClassify(compareAll) {
+    if (!currentFile) return;
+    const model = getSelectedModel();
+    const fd = new FormData();
+    fd.append('image', currentFile);
+    fd.append('model', model);
+    fd.append('compare_all', compareAll ? 'true' : 'false');
+
+    loadingText.textContent = compareAll ? 'Comparing across all 4 models…' : `Running ${modelLabel(model)}…`;
+    loadingOverlay.classList.remove('hidden');
+    resultsStrip.classList.add('hidden');
+
+    fetch('/classify', { method: 'POST', body: fd })
+      .then(r => r.json())
+      .then(data => {
+        loadingOverlay.classList.add('hidden');
+        if (data.error) { showError(data.error); return; }
+        if (data.compare) {
+          renderCompareStrip(data.results, data.img);
+        } else {
+          renderSingleStrip(data.result, data.img);
+        }
+        resultsStrip.classList.remove('hidden');
+        resultsStrip.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      })
+      .catch(e => {
+        loadingOverlay.classList.add('hidden');
+        showError('Network error — please try again.');
+      });
+  }
+
+  // ── Render single result ────────────────────────────────────────────────────
+  function renderSingleStrip(r, img) {
+    const bars = Object.entries(r.probabilities)
+      .map(([cls, pct]) => `
+        <div class="prob-row">
+          <span class="prob-label">${cls}</span>
+          <div class="prob-bar-track">
+            <div class="prob-bar" style="width:${Math.min(pct,100)}%;background:var(--accent)"
+                 data-width="${Math.min(pct,100)}"></div>
+          </div>
+          <span class="prob-value">${pct.toFixed(1)}%</span>
+        </div>`).join('');
+
+    resultsContent.innerHTML = `
+      <div class="inline-result">
+        <div class="inline-result-hero">
+          <div class="result-icon-lg">${r.icon}</div>
+          <div>
+            <div class="result-label-sm">Predicted Class</div>
+            <div class="result-class-name">${r.top_class}</div>
+            <div class="result-conf">
+              <span class="conf-badge ${confidenceClass(r.confidence)}">${r.confidence}% confidence</span>
+              <span class="result-meta">${r.model_label} · ${r.infer_ms} ms${r.demo ? ' · demo' : ''}</span>
+            </div>
+          </div>
+        </div>
+        <div class="prob-list">${bars}</div>
+      </div>`;
+    animateBars();
+  }
+
+  // ── Render compare strip ────────────────────────────────────────────────────
+  function renderCompareStrip(results, img) {
+    const cards = Object.entries(results).map(([key, r]) => `
+      <div class="compare-card">
+        <div class="compare-card-header" style="border-color:${modelColor(key)}">
+          <span class="compare-model">${r.model_label}</span>
+          <span class="conf-badge ${confidenceClass(r.confidence)}">${r.confidence}%</span>
+        </div>
+        <div class="compare-prediction">
+          <span class="compare-icon">${r.icon}</span>
+          <span class="compare-class">${r.top_class}</span>
+        </div>
+        <div class="compare-ms">${r.infer_ms} ms</div>
+      </div>`).join('');
+
+    resultsContent.innerHTML = `
+      <div class="compare-strip-header">
+        <h3 class="strip-heading">All-Model Comparison${results[Object.keys(results)[0]].demo ? ' <span class="demo-tag">demo</span>' : ''}</h3>
+      </div>
+      <div class="compare-grid">${cards}</div>`;
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  const MODEL_COLORS = {
+    custom_cnn:'#22d3ee', mobilenetv2:'#a78bfa',
+    resnet50:'#fb923c', efficientnetb0:'#4ade80'
+  };
+  const MODEL_LABELS = {
+    custom_cnn:'Custom CNN', mobilenetv2:'MobileNetV2',
+    resnet50:'ResNet50', efficientnetb0:'EfficientNetB0'
+  };
+  function modelColor(k) { return MODEL_COLORS[k] || '#6b7280'; }
+  function modelLabel(k) { return MODEL_LABELS[k] || k; }
+  function confidenceClass(pct) {
+    if (pct >= 80) return 'conf-high';
+    if (pct >= 50) return 'conf-mid';
+    return 'conf-low';
+  }
+  function animateBars() {
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.prob-bar').forEach(b => {
+        b.style.width = '0%';
+        setTimeout(() => { b.style.width = b.dataset.width + '%'; }, 50);
+      });
+    });
+  }
+  function showError(msg) {
+    resultsContent.innerHTML = `<div class="error-msg">⚠ ${msg}</div>`;
+    resultsStrip.classList.remove('hidden');
+  }
+
+  // ── Model option click ──────────────────────────────────────────────────────
+  document.querySelectorAll('.model-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      opt.querySelector('input[type=radio]').checked = true;
+    });
+  });
+})();
+</script>
+{% endblock %}

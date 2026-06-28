@@ -118,3 +118,8 @@ After training, copy model files to `webapp/models/` and figures to `webapp/stat
 - Reference architecture: He et al. (ResNet), Sandler et al. (MobileNetV2), Tan & Le (EfficientNet)
 - Explainability: Selvaraju et al. (Grad-CAM, ICCV 2017)
 - Framework: TensorFlow/Keras team at Google
+
+## Web Application
+
+A full-stack Flask web application is available in [`webapp/`](webapp/).  
+See [`webapp/README.md`](webapp/README.md) for local setup and Render deployment instructions.

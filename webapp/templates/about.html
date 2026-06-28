@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}About — VehicleVision{% endblock %}
+
+{% block content %}
+<div class="page-section">
+  <div class="section-header">
+    <h1 class="section-title">About This Project</h1>
+    <p class="section-sub">A Pattern Recognition course project benchmarking four CNN architectures for automated vehicle type classification.</p>
+  </div>
+
+  <div class="about-layout">
+
+    <!-- Left column -->
+    <div class="about-main">
+
+      <div class="card about-card">
+        <h3 class="card-subtitle">Project Overview</h3>
+        <p class="about-text">
+          VehicleVision is a deep learning system for automated vehicle type classification from traffic and parking images. Four convolutional neural network architectures — a custom baseline and three transfer learning models — were trained and benchmarked on a 7-class vehicle dataset of 5,600 images.
+        </p>
+        <p class="about-text">
+          The project demonstrates that transfer learning dramatically outperforms training from scratch, with EfficientNetB0 achieving 99.28% test accuracy using only 4.38M parameters. Grad-CAM visualisations confirm models attend to semantically meaningful vehicle features.
+        </p>
+      </div>
+
+      <div class="card about-card">
+        <h3 class="card-subtitle">Dataset</h3>
+        <div class="dataset-meta">
+          <div class="ds-row"><span class="ds-key">Name</span><span class="ds-val">Vehicle Image Classification Dataset</span></div>
+          <div class="ds-row"><span class="ds-key">Source</span><span class="ds-val">Kaggle — mohamedmaher5/vehicle-classification</span></div>
+          <div class="ds-row"><span class="ds-key">License</span><span class="ds-val">CC BY-SA 4.0</span></div>
+          <div class="ds-row"><span class="ds-key">Total Images</span><span class="ds-val">5,600 high-resolution images</span></div>
+          <div class="ds-row"><span class="ds-key">Classes</span><span class="ds-val">7 — balanced (~800 per class)</span></div>
+          <div class="ds-row"><span class="ds-key">Split</span><span class="ds-val">70% train / 15% validation / 15% test (stratified)</span></div>
+        </div>
+        <div class="class-chips">
+          {% for cls, icon in [('Auto Rickshaws','🛺'),('Bikes','🚲'),('Cars','🚗'),('Motorcycles','🏍️'),('Planes','✈️'),('Ships','🚢'),('Trains','🚂')] %}
+          <span class="class-chip-about">{{ icon }} {{ cls }}</span>
+          {% endfor %}
+        </div>
+        <div class="about-figure-wrap">
+          <img src="{{ url_for('static', filename='figures/fig2_sample_images.png') }}"
+               alt="Sample images" class="about-figure" loading="lazy" />
+          <p class="fig-caption">Fig 2 — One sample image per vehicle class</p>
+        </div>
+      </div>
+
+      <div class="card about-card">
+        <h3 class="card-subtitle">Methodology</h3>
+        <ol class="method-list">
+          <li><strong>EDA &amp; Preprocessing</strong> — Resize to 224×224, normalise, stratified 70/15/15 split, class-weight balancing</li>
+          <li><strong>Data Augmentation</strong> — Flip, rotation, zoom, brightness/contrast, hue/saturation, random crop (training only)</li>
+          <li><strong>Custom CNN</strong> — 4× Conv Blocks (32→64→128→256 filters), GlobalAveragePooling, Dense head, trained from scratch</li>
+          <li><strong>Transfer Learning</strong> — Two-phase: (1) frozen base 5 epochs LR=1e-3, (2) fine-tune last 20–30 layers 25 epochs LR=1e-4</li>
+          <li><strong>Evaluation</strong> — Accuracy, Precision, Recall, F1-Macro, ROC/AUC, confusion matrices, inference timing</li>
+          <li><strong>Explainability</strong> — Grad-CAM visualisations of model attention maps</li>
+          <li><strong>Error Analysis</strong> — Per-class error rates and misclassification patterns</li>
+        </ol>
+        <div class="about-figure-wrap">
+          <img src="{{ url_for('static', filename='figures/fig8_gradcam_custom_cnn.png') }}"
+               alt="Grad-CAM" class="about-figure" loading="lazy" />
+          <p class="fig-caption">Fig 8 — Grad-CAM attention maps highlighting discriminative regions</p>
+        </div>
+      </div>
+
+      <div class="card about-card">
+        <h3 class="card-subtitle">Research Questions</h3>
+        <div class="rq-list">
+          {% set rqs = [
+            ('RQ1','What classification accuracy do CNN architectures achieve on this 7-class vehicle dataset?'),
+            ('RQ2','Which architecture offers the best accuracy-efficiency trade-off?'),
+            ('RQ3','How do preprocessing and augmentation strategies impact model robustness?'),
+            ('RQ4','Do Grad-CAM explanations align with semantically meaningful vehicle features?'),
+            ('RQ5','What are the primary failure patterns and deployment limitations?'),
+          ] %}
+          {% for tag, q in rqs %}
+          <div class="rq-item">
+            <span class="rq-tag">{{ tag }}</span>
+            <span class="rq-text">{{ q }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card about-card">
+        <h3 class="card-subtitle">Key Results</h3>
+        <div class="about-figure-wrap">
+          <img src="{{ url_for('static', filename='figures/fig11_model_comparison.png') }}"
+               alt="Model comparison" class="about-figure" loading="lazy" />
+          <p class="fig-caption">Fig 11 — Multi-metric model comparison across all architectures</p>
+        </div>
+        <div class="about-figure-wrap" style="margin-top: 1.5rem">
+          <img src="{{ url_for('static', filename='figures/fig6_confusion_matrices.png') }}"
+               alt="Confusion matrices" class="about-figure" loading="lazy" />
+          <p class="fig-caption">Fig 6 — Normalised confusion matrices for all four models</p>
+        </div>
+      </div>
+
+      <div class="card about-card">
+        <h3 class="card-subtitle">References</h3>
+        <ol class="ref-list">
+          <li>Khan et al. (2024). Deep Learning-Based Vehicle Type and Color Classification. <em>Applied Sciences</em>, 14(4), 1600.</li>
+          <li>He et al. (2016). Deep Residual Learning for Image Recognition. <em>CVPR 2016</em>.</li>
+          <li>Sandler et al. (2018). MobileNetV2: Inverted Residuals and Linear Bottlenecks. <em>CVPR 2018</em>.</li>
+          <li>Tan &amp; Le (2019). EfficientNet: Rethinking Model Scaling for CNNs. <em>ICML 2019</em>.</li>
+          <li>Selvaraju et al. (2017). Grad-CAM: Visual Explanations from Deep Networks. <em>ICCV 2017</em>.</li>
+          <li>Maher, M. (2024). Vehicle Image Classification Dataset. Kaggle. CC BY-SA 4.0.</li>
+        </ol>
+      </div>
+
+    </div>
+
+    <!-- Right sidebar -->
+    <aside class="about-sidebar">
+
+      <div class="card sidebar-card">
+        <h4 class="sidebar-title">Project Info</h4>
+        <div class="sidebar-rows">
+          <div class="sb-row"><span class="sb-key">Author</span><span class="sb-val">Tania Girish</span></div>
+          <div class="sb-row"><span class="sb-key">Course</span><span class="sb-val">Pattern Recognition</span></div>
+          <div class="sb-row"><span class="sb-key">Year</span><span class="sb-val">2025</span></div>
+          <div class="sb-row"><span class="sb-key">Framework</span><span class="sb-val">TensorFlow 2.13</span></div>
+          <div class="sb-row"><span class="sb-key">Environment</span><span class="sb-val">Kaggle GPU (P100)</span></div>
+        </div>
+      </div>
+
+      <div class="card sidebar-card">
+        <h4 class="sidebar-title">Best Model</h4>
+        <div class="best-model-block">
+          <div class="bm-name" style="color: #4ade80">EfficientNetB0</div>
+          <div class="bm-stats">
+            <div class="bm-stat"><span class="bm-v">99.28%</span><span class="bm-l">Accuracy</span></div>
+            <div class="bm-stat"><span class="bm-v">0.9928</span><span class="bm-l">F1 Macro</span></div>
+            <div class="bm-stat"><span class="bm-v">1.000</span><span class="bm-l">AUC</span></div>
+            <div class="bm-stat"><span class="bm-v">4.38M</span><span class="bm-l">Params</span></div>
+            <div class="bm-stat"><span class="bm-v">5.33 ms</span><span class="bm-l">Inference</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card sidebar-card">
+        <h4 class="sidebar-title">Tech Stack</h4>
+        <div class="tech-list">
+          {% for tech in ['Python 3.10','TensorFlow 2.13','Keras','Flask','NumPy','OpenCV','scikit-learn','Chart.js'] %}
+          <span class="tech-chip">{{ tech }}</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card sidebar-card">
+        <h4 class="sidebar-title">Limitations</h4>
+        <ul class="limit-list">
+          <li>No night / rain / fog images in dataset</li>
+          <li>Single-image classification only</li>
+          <li>No object detection (localization)</li>
+          <li>Global traffic not validated</li>
+          <li>Static images — no video stream</li>
+        </ul>
+      </div>
+
+      <div class="card sidebar-card">
+        <h4 class="sidebar-title">Future Work</h4>
+        <ul class="limit-list">
+          <li>YOLO v8 for multi-vehicle detection</li>
+          <li>LSTM / 3D-CNN for video streams</li>
+          <li>TensorFlow Lite for edge deployment</li>
+          <li>Synthetic weather augmentation</li>
+          <li>Self-supervised pre-training</li>
+        </ul>
+      </div>
+
+      <div class="card sidebar-card">
+        <h4 class="sidebar-title">Quick Links</h4>
+        <div class="quick-links">
+          <a href="{{ url_for('classifier') }}" class="ql-link">⚡ Try the Classifier</a>
+          <a href="{{ url_for('comparison') }}" class="ql-link">📊 View Comparison</a>
+          <a href="{{ url_for('models_page') }}" class="ql-link">🧠 Model Architectures</a>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+{% endblock %}

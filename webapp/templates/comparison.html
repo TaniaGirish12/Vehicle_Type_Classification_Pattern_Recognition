@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% block title %}Model Comparison — VehicleVision{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-section">
+  <div class="section-header">
+    <h1 class="section-title">Model Comparison</h1>
+    <p class="section-sub">Benchmarks across accuracy, efficiency, and per-class performance for all four CNN architectures trained on the 7-class vehicle dataset.</p>
+  </div>
+
+  <!-- ── Summary stat cards ────────────────────────────────────────────────── -->
+  <div class="stat-cards-row">
+    <div class="stat-card card">
+      <div class="stat-card-icon">🏆</div>
+      <div class="stat-card-val">99.28%</div>
+      <div class="stat-card-lbl">Best Accuracy</div>
+      <div class="stat-card-sub">EfficientNetB0</div>
+    </div>
+    <div class="stat-card card">
+      <div class="stat-card-icon">⚡</div>
+      <div class="stat-card-val">5.12 ms</div>
+      <div class="stat-card-lbl">Fastest Inference</div>
+      <div class="stat-card-sub">MobileNetV2</div>
+    </div>
+    <div class="stat-card card">
+      <div class="stat-card-icon">🪶</div>
+      <div class="stat-card-val">1.44M</div>
+      <div class="stat-card-lbl">Smallest Model</div>
+      <div class="stat-card-sub">Custom CNN</div>
+    </div>
+    <div class="stat-card card">
+      <div class="stat-card-icon">📐</div>
+      <div class="stat-card-val">1.000</div>
+      <div class="stat-card-lbl">Perfect AUC</div>
+      <div class="stat-card-sub">3 of 4 models</div>
+    </div>
+  </div>
+
+  <!-- ── Charts row ──────────────────────────────────────────────────────────── -->
+  <div class="charts-row">
+    <div class="card chart-card">
+      <h3 class="card-subtitle">Test Accuracy by Model</h3>
+      <canvas id="accuracyChart" height="220"></canvas>
+    </div>
+    <div class="card chart-card">
+      <h3 class="card-subtitle">Parameters vs Accuracy</h3>
+      <canvas id="bubbleChart" height="220"></canvas>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="card chart-card chart-card-wide">
+      <h3 class="card-subtitle">Multi-Metric Radar</h3>
+      <div class="radar-wrap">
+        <canvas id="radarChart" height="260"></canvas>
+      </div>
+    </div>
+    <div class="card chart-card chart-card-wide">
+      <h3 class="card-subtitle">Inference Speed (ms)</h3>
+      <canvas id="inferChart" height="260"></canvas>
+    </div>
+  </div>
+
+  <!-- ── Performance table ─────────────────────────────────────────────────── -->
+  <div class="card table-card">
+    <h3 class="card-subtitle">Full Performance Table</h3>
+    <div class="table-scroll">
+      <table class="perf-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Accuracy (%)</th>
+            <th>Precision</th>
+            <th>Recall</th>
+            <th>F1 (Macro)</th>
+            <th>AUC</th>
+            <th>Params (M)</th>
+            <th>Infer (ms)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set model_keys = ['custom_cnn','mobilenetv2','resnet50','efficientnetb0'] %}
+          {% for i in range(data['Model']|length) %}
+          {% set mk = model_keys[i] %}
+          {% set m = models[mk] %}
+          <tr class="{{ 'row-best' if mk == 'efficientnetb0' }}">
+            <td>
+              <span class="table-model-dot" style="background:{{ m.color }}"></span>
+              {{ data['Model'][i] }}
+              {% if mk == 'efficientnetb0' %}<span class="badge badge-best badge-sm">Best</span>{% endif %}
+            </td>
+            <td class="num-cell">
+              <span class="acc-bar-wrap">
+                <span class="acc-bar" style="width:{{ ((data['Accuracy'][i] - 85) / 15 * 100)|round }}%; background:{{ m.color }}"></span>
+              </span>
+              {{ data['Accuracy'][i] }}
+            </td>
+            <td class="num-cell">{{ data['Precision'][i] }}</td>
+            <td class="num-cell">{{ data['Recall'][i] }}</td>
+            <td class="num-cell">{{ data['F1 (Macro)'][i] }}</td>
+            <td class="num-cell">{{ data['AUC'][i] }}</td>
+            <td class="num-cell">{{ data['Params (M)'][i] }}</td>
+            <td class="num-cell">{{ data['Infer (ms)'][i] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Training figures ───────────────────────────────────────────────────── -->
+  <div class="card figures-card">
+    <h3 class="card-subtitle">Training Visualisations</h3>
+    <div class="figures-grid">
+      {% set figs = [
+        ('fig5_training_curves.png',   'Training & Validation Curves'),
+        ('fig6_confusion_matrices.png','Confusion Matrices (all models)'),
+        ('fig7_roc_curves.png',        'ROC Curves & AUC'),
+        ('fig11_model_comparison.png', 'Multi-Metric Comparison'),
+      ] %}
+      {% for fname, caption in figs %}
+      <div class="fig-item">
+        <img src="{{ url_for('static', filename='figures/' + fname) }}"
+             alt="{{ caption }}" class="fig-img" loading="lazy"
+             onclick="openLightbox(this)" />
+        <p class="fig-caption">{{ caption }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox hidden" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="" class="lightbox-img" />
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const COLORS = ['#22d3ee','#a78bfa','#fb923c','#4ade80'];
+const LABELS = ['Custom CNN','MobileNetV2','ResNet50','EfficientNetB0'];
+const chartDefaults = {
+  font: { family: 'Inter, sans-serif', size: 12 },
+  color: '#94a3b8',
+};
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = 'Inter, sans-serif';
+
+const gridColor = 'rgba(255,255,255,0.06)';
+
+// Accuracy bar chart
+new Chart(document.getElementById('accuracyChart'), {
+  type: 'bar',
+  data: {
+    labels: LABELS,
+    datasets: [{
+      label: 'Test Accuracy (%)',
+      data: [89.99, 99.17, 98.93, 99.28],
+      backgroundColor: COLORS,
+      borderRadius: 6,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { min: 85, max: 100, grid: { color: gridColor }, ticks: { callback: v => v + '%' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// Bubble: params vs accuracy
+new Chart(document.getElementById('bubbleChart'), {
+  type: 'bubble',
+  data: {
+    datasets: [
+      { label: 'Custom CNN',    data: [{ x: 1.44,  y: 89.99, r: 10 }], backgroundColor: COLORS[0] + 'cc' },
+      { label: 'MobileNetV2',  data: [{ x: 2.59,  y: 99.17, r: 13 }], backgroundColor: COLORS[1] + 'cc' },
+      { label: 'ResNet50',     data: [{ x: 24.77, y: 98.93, r: 22 }], backgroundColor: COLORS[2] + 'cc' },
+      { label: 'EfficientNetB0',data:[{ x: 4.38,  y: 99.28, r: 14 }], backgroundColor: COLORS[3] + 'cc' },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } },
+    scales: {
+      x: { title: { display: true, text: 'Parameters (M)' }, grid: { color: gridColor } },
+      y: { min: 87, max: 100, title: { display: true, text: 'Accuracy (%)' }, grid: { color: gridColor },
+           ticks: { callback: v => v + '%' } }
+    }
+  }
+});
+
+// Radar
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: ['Accuracy', 'Precision', 'Recall', 'F1', 'AUC', 'Speed (inv)'],
+    datasets: [
+      { label:'Custom CNN',     data:[89.99,90.1,89.98,90.0,99.3,97], borderColor:COLORS[0], backgroundColor:COLORS[0]+'22', pointBackgroundColor:COLORS[0] },
+      { label:'MobileNetV2',   data:[99.17,99.17,99.16,99.16,100,99], borderColor:COLORS[1], backgroundColor:COLORS[1]+'22', pointBackgroundColor:COLORS[1] },
+      { label:'ResNet50',      data:[98.93,98.95,98.93,98.92,100,93], borderColor:COLORS[2], backgroundColor:COLORS[2]+'22', pointBackgroundColor:COLORS[2] },
+      { label:'EfficientNetB0',data:[99.28,99.29,99.28,99.28,100,98], borderColor:COLORS[3], backgroundColor:COLORS[3]+'22', pointBackgroundColor:COLORS[3] },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } },
+    scales: {
+      r: {
+        min: 85, max: 100,
+        grid: { color: gridColor },
+        angleLines: { color: gridColor },
+        pointLabels: { font: { size: 11 } },
+        ticks: { display: false }
+      }
+    }
+  }
+});
+
+// Inference speed
+new Chart(document.getElementById('inferChart'), {
+  type: 'bar',
+  data: {
+    labels: LABELS,
+    datasets: [{
+      label: 'Inference (ms)',
+      data: [5.55, 5.12, 6.95, 5.33],
+      backgroundColor: COLORS,
+      borderRadius: 6, borderSkipped: false,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { callback: v => v + ' ms' } },
+      y: { grid: { display: false } }
+    }
+  }
+});
+
+// Lightbox
+function openLightbox(img) {
+  document.getElementById('lightboxImg').src = img.src;
+  document.getElementById('lightbox').classList.remove('hidden');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.add('hidden');
+}
+</script>
+{% endblock %}

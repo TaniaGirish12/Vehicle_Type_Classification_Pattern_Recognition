@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Results — VehicleVision{% endblock %}
+
+{% block content %}
+<div class="page-section">
+  <div class="section-header">
+    <a href="{{ url_for('classifier') }}" class="back-link">← Back to Classifier</a>
+    <h1 class="section-title">Classification Results</h1>
+    {% if demo %}<span class="demo-badge-inline">DEMO</span>{% endif %}
+  </div>
+
+  {% if result %}
+  <!-- ── Single model result ─────────────────────────────────────────────── -->
+  <div class="results-layout">
+
+    <!-- Left: Hero result card -->
+    <div class="result-hero-card card">
+      {% if img_name %}
+      <div class="result-image-wrap">
+        <img src="{{ url_for('uploaded_file', filename=img_name) }}"
+             alt="Uploaded image" class="result-uploaded-img" />
+      </div>
+      {% endif %}
+
+      <div class="result-prediction-block">
+        <p class="result-label-tag">Predicted Vehicle</p>
+        <div class="result-class-hero">
+          <span class="result-emoji-xl">{{ class_icons[result.top_class] }}</span>
+          <span class="result-class-xl">{{ result.top_class }}</span>
+        </div>
+        <div class="result-meta-row">
+          <span class="conf-badge {{ 'conf-high' if result.confidence >= 80 else ('conf-mid' if result.confidence >= 50 else 'conf-low') }}">
+            {{ result.confidence }}% confidence
+          </span>
+          <span class="result-meta-chip">{{ result.model_label }}</span>
+          <span class="result-meta-chip">{{ result.infer_ms }} ms</span>
+          {% if result.demo %}<span class="result-meta-chip demo-chip">demo</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Probabilities + model info -->
+    <div class="result-details">
+      <div class="card prob-card">
+        <h3 class="card-subtitle">Class Probabilities</h3>
+        <div class="prob-list-full">
+          {% for cls, pct in result.probabilities.items() %}
+          <div class="prob-row-full">
+            <span class="prob-icon">{{ class_icons[cls] }}</span>
+            <span class="prob-label-full {{ 'prob-winner' if cls == result.top_class }}">{{ cls }}</span>
+            <div class="prob-bar-track-full">
+              <div class="prob-bar-full {{ 'prob-bar-winner' if cls == result.top_class }}"
+                   style="--target-width: {{ [pct, 100]|min }}%"></div>
+            </div>
+            <span class="prob-pct {{ 'prob-winner' if cls == result.top_class }}">{{ "%.1f"|format(pct) }}%</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card model-info-card">
+        <h3 class="card-subtitle">Model Used</h3>
+        {% set mk = result.model_key %}
+        {% set m = models[mk] %}
+        <div class="model-info-row">
+          <span class="model-dot-lg" style="background:{{ m.color }}"></span>
+          <div>
+            <div class="model-info-name">{{ m.label }}</div>
+            <div class="model-info-desc">{{ m.description }}</div>
+          </div>
+        </div>
+        <div class="model-stat-row">
+          <div class="model-stat">
+            <div class="stat-val">{{ m.accuracy }}%</div>
+            <div class="stat-lbl">Test Accuracy</div>
+          </div>
+          <div class="model-stat">
+            <div class="stat-val">{{ m.f1 }}</div>
+            <div class="stat-lbl">F1 Macro</div>
+          </div>
+          <div class="model-stat">
+            <div class="stat-val">{{ m.params }}</div>
+            <div class="stat-lbl">Parameters</div>
+          </div>
+          <div class="model-stat">
+            <div class="stat-val">{{ m.infer_ms }} ms</div>
+            <div class="stat-lbl">Inference</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% elif results %}
+  <!-- ── Multi-model comparison result ──────────────────────────────────── -->
+  {% if img_name %}
+  <div class="compare-image-row">
+    <img src="{{ url_for('uploaded_file', filename=img_name) }}"
+         alt="Uploaded image" class="compare-uploaded-img" />
+    <div class="compare-image-caption">Uploaded image · all 4 models ran on this file</div>
+  </div>
+  {% endif %}
+
+  <div class="compare-results-grid">
+    {% for key, r in results.items() %}
+    {% set m = models[key] %}
+    <div class="compare-result-card card" style="--model-color: {{ m.color }}">
+      <div class="crc-header">
+        <span class="crc-model">{{ r.model_label }}</span>
+        {% if key == 'efficientnetb0' %}<span class="badge badge-best">Best</span>{% endif %}
+      </div>
+      <div class="crc-prediction">
+        <span class="crc-icon">{{ class_icons[r.top_class] }}</span>
+        <span class="crc-class">{{ r.top_class }}</span>
+      </div>
+      <div class="crc-conf">
+        <span class="conf-badge {{ 'conf-high' if r.confidence >= 80 else ('conf-mid' if r.confidence >= 50 else 'conf-low') }}">
+          {{ r.confidence }}%
+        </span>
+        <span class="crc-ms">{{ r.infer_ms }} ms</span>
+      </div>
+      <div class="crc-bars">
+        {% for cls, pct in r.probabilities.items() %}
+        <div class="crc-bar-row">
+          <span class="crc-bar-label">{{ cls }}</span>
+          <div class="crc-bar-track">
+            <div class="crc-bar" style="width: {{ [pct, 100]|min }}%; background: {{ m.color }}"></div>
+          </div>
+          <span class="crc-bar-pct">{{ "%.0f"|format(pct) }}%</span>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="crc-footer">
+        <span>Acc {{ m.accuracy }}%</span>
+        <span>F1 {{ m.f1 }}</span>
+        <span>{{ m.params }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state card">
+    <div class="empty-icon">📭</div>
+    <p>No classification results yet.</p>
+    <a href="{{ url_for('classifier') }}" class="btn btn-primary">Go to Classifier</a>
+  </div>
+  {% endif %}
+
+  <div class="results-cta-row">
+    <a href="{{ url_for('classifier') }}" class="btn btn-outline">← Classify Another Image</a>
+    <a href="{{ url_for('comparison') }}" class="btn btn-ghost">View Model Comparison →</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Animate probability bars on load
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.prob-bar-full, .crc-bar').forEach(bar => {
+    const target = bar.style.width || getComputedStyle(bar).getPropertyValue('--target-width');
+    bar.style.width = '0%';
+    setTimeout(() => {
+      bar.style.width = target;
+    }, 100);
+  });
+});
+</script>
+{% endblock %}

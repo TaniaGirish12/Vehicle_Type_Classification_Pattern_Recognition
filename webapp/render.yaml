@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: vehiclevision
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --threads 2 --bind 0.0.0.0:$PORT --timeout 120
+    envVars:
+      - key: DEMO_MODE
+        value: "true"          # set to "false" when model files are present
+      - key: SECRET_KEY
+        generateValue: true    # Render auto-generates a secure random value
+      - key: FLASK_DEBUG
+        value: "false"
+    disk:
+      name: model-storage
+      mountPath: /opt/models
+      sizeGB: 2                # optional: mount a persistent disk for model files
