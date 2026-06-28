@@ -150,11 +150,9 @@ def preprocess_image(img_path: str, preprocess_mode: str) -> np.ndarray:
         arr = arr / 255.0  # the embedded Lambda handles the rest
 
     elif preprocess_mode == "efficientnet":
-        # Lambda stripped. EfficientNetB0's preprocess_input: [0,255] → [-1,1]
-        # The notebook pipeline normalized /255 first, then Lambda scaled:
-        # x*255 → preprocess_input → [-1,1]
-        # Net effect on raw pixels: preprocess_input(raw_pixels) = raw/127.5 - 1
-        arr = arr / 127.5 - 1.0
+        # The Lambda (z * 255) is embedded in the TFLite graph.
+        # TFLite receives [0,1] input → Lambda scales to [0,255] → backbone normalises.
+        arr = arr / 255.0
 
     elif preprocess_mode == "resnet50":
         # Lambda stripped. ResNet50: scale255 then resnet preprocess_input.
