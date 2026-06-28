@@ -418,10 +418,9 @@ img { max-width: 100%; display: block; }
 
 .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
 @media (max-width: 700px) { .charts-row { grid-template-columns: 1fr; } }
-.chart-card { min-height: 280px; }
-.chart-card-wide { } /* equal columns */
-.radar-wrap { display: flex; justify-content: center; }
-.radar-wrap canvas { max-width: 320px; }
+.chart-card { }
+.chart-wrap { position: relative; height: 260px; width: 100%; }
+.chart-wrap-radar { height: 300px; }
 
 .table-card { margin-bottom: 1rem; overflow: hidden; }
 .table-scroll { overflow-x: auto; }

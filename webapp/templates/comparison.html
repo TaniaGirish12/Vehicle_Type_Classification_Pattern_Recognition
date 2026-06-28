@@ -44,24 +44,22 @@
   <div class="charts-row">
     <div class="card chart-card">
       <h3 class="card-subtitle">Test Accuracy by Model</h3>
-      <canvas id="accuracyChart" height="220"></canvas>
+      <div class="chart-wrap"><canvas id="accuracyChart"></canvas></div>
     </div>
     <div class="card chart-card">
       <h3 class="card-subtitle">Parameters vs Accuracy</h3>
-      <canvas id="bubbleChart" height="220"></canvas>
+      <div class="chart-wrap"><canvas id="bubbleChart"></canvas></div>
     </div>
   </div>
 
   <div class="charts-row">
-    <div class="card chart-card chart-card-wide">
+    <div class="card chart-card">
       <h3 class="card-subtitle">Multi-Metric Radar</h3>
-      <div class="radar-wrap">
-        <canvas id="radarChart" height="260"></canvas>
-      </div>
+      <div class="chart-wrap chart-wrap-radar"><canvas id="radarChart"></canvas></div>
     </div>
-    <div class="card chart-card chart-card-wide">
+    <div class="card chart-card">
       <h3 class="card-subtitle">Inference Speed (ms)</h3>
-      <canvas id="inferChart" height="260"></canvas>
+      <div class="chart-wrap"><canvas id="inferChart"></canvas></div>
     </div>
   </div>
 
@@ -143,17 +141,17 @@
 {% block scripts %}
 <script>
 const COLORS = ['#22d3ee','#a78bfa','#fb923c','#4ade80'];
+const COLORS_A = ['rgba(34,211,238,0.75)','rgba(167,139,250,0.75)','rgba(251,146,60,0.75)','rgba(74,222,128,0.75)'];
 const LABELS = ['Custom CNN','MobileNetV2','ResNet50','EfficientNetB0'];
-const chartDefaults = {
-  font: { family: 'Inter, sans-serif', size: 12 },
-  color: '#94a3b8',
-};
+
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.font.family = 'Inter, sans-serif';
+Chart.defaults.font.size = 12;
 
-const gridColor = 'rgba(255,255,255,0.06)';
+const gridColor = 'rgba(255,255,255,0.07)';
+const commonOpts = { responsive: true, maintainAspectRatio: false };
 
-// Accuracy bar chart
+// 1 ── Accuracy bar chart
 new Chart(document.getElementById('accuracyChart'), {
   type: 'bar',
   data: {
@@ -161,71 +159,98 @@ new Chart(document.getElementById('accuracyChart'), {
     datasets: [{
       label: 'Test Accuracy (%)',
       data: [89.99, 99.17, 98.93, 99.28],
-      backgroundColor: COLORS,
+      backgroundColor: COLORS_A,
+      borderColor: COLORS,
+      borderWidth: 1.5,
       borderRadius: 6,
       borderSkipped: false,
     }]
   },
   options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    ...commonOpts,
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}%` } }
+    },
     scales: {
-      y: { min: 85, max: 100, grid: { color: gridColor }, ticks: { callback: v => v + '%' } },
+      y: { min: 85, max: 100, grid: { color: gridColor },
+           ticks: { callback: v => v + '%' } },
       x: { grid: { display: false } }
     }
   }
 });
 
-// Bubble: params vs accuracy
+// 2 ── Bubble: params vs accuracy
 new Chart(document.getElementById('bubbleChart'), {
   type: 'bubble',
   data: {
     datasets: [
-      { label: 'Custom CNN',    data: [{ x: 1.44,  y: 89.99, r: 10 }], backgroundColor: COLORS[0] + 'cc' },
-      { label: 'MobileNetV2',  data: [{ x: 2.59,  y: 99.17, r: 13 }], backgroundColor: COLORS[1] + 'cc' },
-      { label: 'ResNet50',     data: [{ x: 24.77, y: 98.93, r: 22 }], backgroundColor: COLORS[2] + 'cc' },
-      { label: 'EfficientNetB0',data:[{ x: 4.38,  y: 99.28, r: 14 }], backgroundColor: COLORS[3] + 'cc' },
+      { label:'Custom CNN',     data:[{x:1.44, y:89.99,r:9}],  backgroundColor:COLORS_A[0], borderColor:COLORS[0] },
+      { label:'MobileNetV2',   data:[{x:2.59, y:99.17,r:11}], backgroundColor:COLORS_A[1], borderColor:COLORS[1] },
+      { label:'ResNet50',      data:[{x:24.77,y:98.93,r:20}], backgroundColor:COLORS_A[2], borderColor:COLORS[2] },
+      { label:'EfficientNetB0',data:[{x:4.38, y:99.28,r:13}], backgroundColor:COLORS_A[3], borderColor:COLORS[3] },
     ]
   },
   options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } },
+    ...commonOpts,
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 11, padding: 14 } },
+      tooltip: { callbacks: {
+        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}% acc, ${ctx.parsed.x}M params`
+      }}
+    },
     scales: {
-      x: { title: { display: true, text: 'Parameters (M)' }, grid: { color: gridColor } },
-      y: { min: 87, max: 100, title: { display: true, text: 'Accuracy (%)' }, grid: { color: gridColor },
+      x: { min: 0, max: 27,
+           title: { display: true, text: 'Parameters (M)', color: '#94a3b8' },
+           grid: { color: gridColor } },
+      y: { min: 87, max: 100,
+           title: { display: true, text: 'Accuracy (%)', color: '#94a3b8' },
+           grid: { color: gridColor },
            ticks: { callback: v => v + '%' } }
     }
   }
 });
 
-// Radar
+// 3 ── Radar — 5 real metrics, all in 0-100 % scale
 new Chart(document.getElementById('radarChart'), {
   type: 'radar',
   data: {
-    labels: ['Accuracy', 'Precision', 'Recall', 'F1', 'AUC', 'Speed (inv)'],
+    labels: ['Accuracy (%)', 'Precision (%)', 'Recall (%)', 'F1 Score (%)', 'AUC (%)'],
     datasets: [
-      { label:'Custom CNN',     data:[89.99,90.1,89.98,90.0,99.3,97], borderColor:COLORS[0], backgroundColor:COLORS[0]+'22', pointBackgroundColor:COLORS[0] },
-      { label:'MobileNetV2',   data:[99.17,99.17,99.16,99.16,100,99], borderColor:COLORS[1], backgroundColor:COLORS[1]+'22', pointBackgroundColor:COLORS[1] },
-      { label:'ResNet50',      data:[98.93,98.95,98.93,98.92,100,93], borderColor:COLORS[2], backgroundColor:COLORS[2]+'22', pointBackgroundColor:COLORS[2] },
-      { label:'EfficientNetB0',data:[99.28,99.29,99.28,99.28,100,98], borderColor:COLORS[3], backgroundColor:COLORS[3]+'22', pointBackgroundColor:COLORS[3] },
+      { label:'Custom CNN',
+        data:[89.99, 90.10, 89.98, 90.00, 99.28],
+        borderColor:COLORS[0], backgroundColor:'rgba(34,211,238,0.10)',
+        pointBackgroundColor:COLORS[0], pointRadius:4, borderWidth:2 },
+      { label:'MobileNetV2',
+        data:[99.17, 99.17, 99.16, 99.16, 99.99],
+        borderColor:COLORS[1], backgroundColor:'rgba(167,139,250,0.10)',
+        pointBackgroundColor:COLORS[1], pointRadius:4, borderWidth:2 },
+      { label:'ResNet50',
+        data:[98.93, 98.95, 98.93, 98.92, 99.98],
+        borderColor:COLORS[2], backgroundColor:'rgba(251,146,60,0.10)',
+        pointBackgroundColor:COLORS[2], pointRadius:4, borderWidth:2 },
+      { label:'EfficientNetB0',
+        data:[99.28, 99.29, 99.28, 99.28, 100.00],
+        borderColor:COLORS[3], backgroundColor:'rgba(74,222,128,0.10)',
+        pointBackgroundColor:COLORS[3], pointRadius:4, borderWidth:2 },
     ]
   },
   options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } },
+    ...commonOpts,
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 11, padding: 14 } } },
     scales: {
       r: {
-        min: 85, max: 100,
+        min: 88, max: 100,
         grid: { color: gridColor },
-        angleLines: { color: gridColor },
-        pointLabels: { font: { size: 11 } },
-        ticks: { display: false }
+        angleLines: { color: 'rgba(255,255,255,0.12)' },
+        pointLabels: { font: { size: 11 }, color: '#94a3b8' },
+        ticks: { stepSize: 3, backdropColor: 'transparent',
+                 color: '#64748b', callback: v => v + '%' }
       }
     }
   }
 });
 
-// Inference speed
+// 4 ── Inference speed (horizontal bar)
 new Chart(document.getElementById('inferChart'), {
   type: 'bar',
   data: {
@@ -233,16 +258,23 @@ new Chart(document.getElementById('inferChart'), {
     datasets: [{
       label: 'Inference (ms)',
       data: [5.55, 5.12, 6.95, 5.33],
-      backgroundColor: COLORS,
-      borderRadius: 6, borderSkipped: false,
+      backgroundColor: COLORS_A,
+      borderColor: COLORS,
+      borderWidth: 1.5,
+      borderRadius: 6,
+      borderSkipped: false,
     }]
   },
   options: {
     indexAxis: 'y',
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    ...commonOpts,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} ms` } }
+    },
     scales: {
-      x: { grid: { color: gridColor }, ticks: { callback: v => v + ' ms' } },
+      x: { min: 4, max: 8, grid: { color: gridColor },
+           ticks: { callback: v => v + ' ms' } },
       y: { grid: { display: false } }
     }
   }
