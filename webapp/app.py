@@ -115,11 +115,14 @@ def get_interpreter(model_key: str):
     if not model_path.exists():
         raise FileNotFoundError(f"Model file not found: {model_path}")
     try:
-        import tflite_runtime.interpreter as tflite
-        Interpreter = tflite.Interpreter
+        from ai_edge_litert.interpreter import Interpreter
     except ImportError:
-        import tensorflow as tf
-        Interpreter = tf.lite.Interpreter
+        try:
+            import tflite_runtime.interpreter as tflite
+            Interpreter = tflite.Interpreter
+        except ImportError:
+            import tensorflow as tf
+            Interpreter = tf.lite.Interpreter
     log.info(f"Loading TFLite: {model_key}")
     interp = Interpreter(model_path=str(model_path))
     interp.allocate_tensors()
